@@ -2,15 +2,12 @@ import {Request, Response} from "express";
 
 import {prisma} from "../../config/prisma";
 import prismaErrorCodes from "../../config/prismaErrorCodes.json";
-import { request } from "node:http";
 import { Prisma } from "../../generated/prisma/client";
-
-
 
 export default {
     list: async (request: Request, response: Response) => {
         try {
-            const users = await prisma.alunos.findMany();
+            const users = await prisma.cursos.findMany();
 
         return response.status(200).json(users);
 
@@ -26,13 +23,15 @@ export default {
     },
     create: async (request: Request, response: Response) => {
         try{
-            const { nome, idade, cpf, email } = request.body;
-        const users = await prisma.alunos.create({
+            const {nome, professor, cargaHoraria, descricao } = request.body;
+        const users = await prisma.cursos.create({
             data: {
-                nome ,
-                idade ,
-                cpf ,
-                email 
+            
+                nome,
+                professor, 
+                cargaHoraria,
+                descricao, 
+                
             },
         });
              return response.status(201).json(users);
@@ -52,16 +51,16 @@ export default {
     update: async (request: Request, response: Response) => {
         try{
              const {id} = request.params;
-        const {nome, idade, cpf, email} = request.body;
-        const users = await prisma.alunos.update({
+        const {nome, professor, cargaHoraria, descricao} = request.body;
+        const users = await prisma.cursos.update({
             where: {
                 id: Number(id)
             },
             data: {
                 nome,
-                idade,
-                cpf, 
-                email,
+                professor, 
+                cargaHoraria,
+                descricao, 
             }
         });
 
@@ -84,7 +83,7 @@ export default {
 
         try{
             const {id } = request.params;
-        const user = await prisma.alunos.findUnique({
+        const user = await prisma.cursos.findUnique({
             where:{
                 id: +id
                 
@@ -109,7 +108,7 @@ export default {
         try{
             const {id} = request.params;
       
-        const users = await prisma.alunos.delete({
+        const users = await prisma.cursos.delete({
             where: {
                 id: Number(id)
             },
