@@ -17,6 +17,13 @@ routes.get("/alunos/:id", (request, respons) => alunosController.getById(request
 
 routes.delete("/alunos/:id", (request, respons) => alunosController.delete(request, respons))
 
+routes.post("/matriculas", (request, response) =>
+    alunosController.matricular(request, response)
+);
+
+
+
+
 
 
 routes.get("/", (request, response) => response.status(200).json({success: true}),);

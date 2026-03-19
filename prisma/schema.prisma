@@ -13,24 +13,37 @@ datasource db {
 }
 
 model Alunos {
-  id Int @id @default(autoincrement())
-  nome String
-  idade Int 
-  cpf Int @unique
-  email String @unique
+  id        Int      @id @default(autoincrement())
+  nome      String
+  idade     Int
+  cpf       Int      @unique
+  email     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  matriculas Matriculas[]
 }
 
-
 model Cursos {
-
-  id Int @id @default(autoincrement())
-  nome String @unique
-  professor String?
+  id           Int      @id @default(autoincrement())
+  nome         String   @unique
+  professor    String?
   cargaHoraria Int
-  descricao String
-  createdAt DateTime @default(now())
-  updataAt  DateTime @updatedAt
+  descricao    String
+  createdAt    DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
+  matriculas Matriculas[]
+}
+
+model Matriculas {
+  id Int @id @default(autoincrement())
+
+  alunoId Int
+  cursoId Int
+
+  aluno Alunos @relation(fields: [alunoId], references: [id])
+  curso Cursos @relation(fields: [cursoId], references: [id])
+
+  @@unique([alunoId, cursoId])
 }
