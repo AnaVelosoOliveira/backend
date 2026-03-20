@@ -52,7 +52,7 @@ export type Alunos = Prisma.AlunosModel
  */
 export type Cursos = Prisma.CursosModel
 /**
- * Model Matriculas
+ * Model AlunosCursos
  * 
  */
-export type Matriculas = Prisma.MatriculasModel
+export type AlunosCursos = Prisma.AlunosCursosModel
