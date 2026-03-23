@@ -1,33 +1,47 @@
-import { Request, Response } from "express"; // import { PrismaCliente } from "@prisma/client";
-import { prisma } from "../../config/prisma"; // const prisma = new PrismaCliente();
-import prismaErrorCodes from "../../config/prismaErrorCodes.json"; // importando os códigos de erro do Prisma para tratar erros específicos
+import { Request, Response } from "express"; 
+import { prisma } from "../../config/prisma";
+import prismaErrorCodes from "../../config/prismaErrorCodes.json"; 
 import { Prisma } from "../../generated/prisma/client";
 
-// Tudo isso foi comentário da Ia
+
 
 export default {
 
     list: async (request: Request, response: Response) => {
-        try {
-            const users = await prisma.alunos.findMany({
-                include: {
-
-                    cursos: true,
-
-                },
-            });
-            return response.status(200).json(users);
-        } catch (e) {
-            if (e instanceof Prisma.PrismaClientKnownRequestError) {
-                // @ts-ignore
-                return response.status(prismaErrorCodes[e.code] || 500).json(e.message);
+    try {
+        const alunos = await prisma.alunos.findMany({
+            include: {
+                cursos: {
+                    include: {
+                        cursos: true
+                    }
+                }
             }
-            return response.status(500).json("Unkwon error. Try again later");
-        }
-    },
+        });
 
-    create: async (request: Request, response: Response) => { // criar
-        try {// try é usado para tentar executar o código, caso haja um erro, ele é capturado pelo catch
+        const resultado = alunos.map(aluno => ({
+            id: aluno.id,
+            nome: aluno.nome,
+            idade: aluno.idade,
+            cpf: aluno.cpf,
+            email: aluno.email,
+            cursos: aluno.cursos.map(c => ({
+                id: c.cursos.id,
+                nome: c.cursos.nome,
+                professor: c.cursos.professor,
+                cargaHoraria: c.cursos.cargaHoraria
+            }))
+        }));
+
+        return response.status(200).json(resultado);
+
+    } catch (e) {
+        return response.status(500).json("Erro ao listar alunos");
+    }
+},
+
+    create: async (request: Request, response: Response) => { 
+        try {
             const { nome, idade, cpf, email } = request.body;
             const user = await prisma.alunos.create({
                 data: {
@@ -37,8 +51,12 @@ export default {
                     email
                 },
             });
-            return response.status(201).json(user);
-        } catch (e: any) { // se houver um erro, ele é capturado aqui, e o tipo do erro é any, para que possamos acessar a propriedade code do erro
+            return response.status(201).json({
+                message: "Aluno criado com sucesso",
+                data: user
+            });
+        } catch (e: any) {
+            console.error(e) 
             if (e instanceof Prisma.PrismaClientKnownRequestError) {
                 // @ts-ignore
                 return response.status(prismaErrorCodes[e.code] || 500).json(e.message)
@@ -47,7 +65,7 @@ export default {
         }
     },
 
-    update: async (request: Request, response: Response) => { // atualizar
+    update: async (request: Request, response: Response) => {
         try {
             const { id } = request.params;
             const { nome, idade, cpf, email } = request.body;
@@ -62,7 +80,7 @@ export default {
                     email
                 },
             });
-            return response.status(500).json();
+            return response.status(200).json(user);
         } catch (e) {
             if (e instanceof Prisma.PrismaClientKnownRequestError) {
                 // @ts-ignore
@@ -76,10 +94,10 @@ export default {
     getById: async (request: Request, response: Response) => {
 
         try {
-            const { id } = request.params; // cria o id a partir dos parâmetros da requisição
-            const user = await prisma.alunos.findUnique({ // usa o prisma para encontrar um usuário único com base no id
-                where: { // onde o id é igual ao id passado como parâmetro
-                    id: +id // o + é usado para converter o id de string para número, pois o id no banco de dados é do tipo número
+            const { id } = request.params; 
+            const user = await prisma.alunos.findUnique({ 
+                where: { 
+                    id: +id 
                 },
             });
             return response.status(200).json(user) // retorna o usuário encontrado com status 200
@@ -112,27 +130,55 @@ export default {
 
     },
 
-    created: async (request: Request, response: Response) => { 
-        try {
-            const { nome, idade, cpf, email } = request.body;
-            const user = await prisma.alunos.create({
-                data: {
-                    nome,
-                    idade,
-                    cpf,
-                    email
-                },
-            });
-            return response.status(201).json(user);
-        } catch (e: any) { 
-            if (e instanceof Prisma.PrismaClientKnownRequestError) {
-                // @ts-ignore
-                return response.status(prismaErrorCodes[e.code] || 500).json(e.message)
+
+    matricular: async (request: Request, response: Response) => {
+    try {
+        const { alunoId, cursoId } = request.body;
+
+        const matricula = await prisma.alunos.update({
+            where: { id: alunoId },
+            data: {
+                cursos: {
+                    create: {
+                        cursos: {
+                            connect: { id: cursoId }
+                        }
+                    }
+                }
+            },
+            include: {
+                cursos: {
+                    include: {
+                        cursos: true
+                    }
+                }
             }
-            return response.status(500).json("Unkwon error. Try again later");
-        }
-    },
-    
+        });
+
+        return response.status(200).json(matricula);
+    } catch (e) {
+        console.log(e);
+        return response.status(500).json("Erro ao matricular aluno");
+    }
+},
+
+
+desmatricular: async (request: Request, response: Response) => {
+    try {
+        const { alunoId, cursoId } = request.body;
+
+        const matricula = await prisma.alunosCursos.deleteMany({
+            where: {
+                alunosId: alunoId,
+                cursosId: cursoId
+            }
+        });
+
+        return response.status(200).json(matricula);
+    } catch (e) {
+        return response.status(500).json("Erro ao remover matrícula");
+    }
+},
 
 
 

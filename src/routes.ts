@@ -19,7 +19,8 @@ routes.post("/alunos", alunosController.create);
 routes.put("/alunos/:id", alunosController.update); 
 
 routes.delete("/alunos/:id", alunosController.delete); 
-routes.post("/matriculas", alunosController.create)
+routes.post("/matriculas", alunosController.matricular);
+routes.delete("/matriculas", alunosController.desmatricular);
 
 
 routes.get("/cursos", cursosController.list);
