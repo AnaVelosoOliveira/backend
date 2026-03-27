@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../../config/prisma";
 import prismaErrorCodes from "../../config/prismaErrorCodes.json";
 import { Prisma } from "../../generated/prisma/client";
+import {handleError} from "../helpers/handleError";
 
 export default {
 
@@ -10,11 +11,7 @@ export default {
             const users = await prisma.cursos.findMany();
             return response.status(200).json(users);
         } catch (e) {
-            if (e instanceof Prisma.PrismaClientKnownRequestError) {
-                // @ts-ignore
-                return response.status(prismaErrorCodes[e.code] || 500).json(e.message)
-            }
-            return response.status(500).json("Unkwon error. Try again later");
+           return handleError(e, response);
         }
     },
 
@@ -31,11 +28,7 @@ export default {
             });
             return response.status(201).json(user);
         } catch (e: any) {
-            if (e instanceof Prisma.PrismaClientKnownRequestError) {
-                // @ts-ignore
-                return response.status(prismaErrorCodes[e.code] || 500).json(e.message)
-            }
-            return response.status(500).json("Unkwon error. Try again later");
+            return handleError(e, response);
         }
     },
 
@@ -54,11 +47,7 @@ export default {
             });
             return response.status(200).json(user);
         } catch (e) {
-            if (e instanceof Prisma.PrismaClientKnownRequestError) {
-                // @ts-ignore
-                return response.status(prismaErrorCodes[e.code] || 500).json(e.message)
-            }
-            return response.status(500).json("Unkwon error. Try again later");
+            return handleError(e, response);
         }
     },
 
@@ -72,11 +61,7 @@ export default {
             });
             return response.status(200).json(user)
         } catch (e) {
-            if (e instanceof Prisma.PrismaClientKnownRequestError) {
-                // @ts-ignore
-                return response.status(prismaErrorCodes[e.code] || 500).json(e.message)
-            }
-            return response.status(500).json("Unkwon error. Try again later");
+            return handleError(e, response);
         }
     },
 
@@ -90,11 +75,7 @@ export default {
             });
             return response.status(200).json(user);
         } catch (e) {
-            if (e instanceof Prisma.PrismaClientKnownRequestError) {
-                // @ts-ignore
-                return response.status(prismaErrorCodes[e.code] || 500).json(e.message)
-            }
-            return response.status(500).json("Unkwon error. Try again later");
+            return handleError(e, response);
         }
     }
 };
