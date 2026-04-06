@@ -3,7 +3,6 @@ import bcrypt from "bcrypt";
 import { prisma } from "../../config/prisma";
 import {handleError} from "../helpers/handleError";
 import jwt from "jsonwebtoken";
-import { access } from "node:fs";
 
 
 
@@ -15,15 +14,16 @@ export default {
             const employees = await prisma.funcionarios.findUnique({
                 where:{
                 email,
-                senha: bcrypt.hashSync(senha, +process.env.BCRYPT_ROUNDS!),
+               
                 },
             });
 
-            if (!employees) {
+            if (!employees ||  !bcrypt.compareSync(senha, employees.senha)) {
                 return response.status(404).json("Email e/ou senha inválidos");
             }
 
-            const token = jwt.sign(employees, process.env.JWT_SECRET!);
+            const token = jwt.sign(employees, process.env.JWT_SECRET!, {expiresIn: "1d"}) 
+
             return response.status(200).json({access_token: token});
 
         }catch(e) {
@@ -43,7 +43,19 @@ export default {
 
     create: async (request: Request, response: Response) => { 
         try {
-            const { nome, senha, email, admin } = request.body;
+            const { nome, senha, email, admin, user } = request.body;
+
+            if(!user.admin){
+                return response.status(403).json("Não autorizado");
+
+            }
+
+            if(nome || !email || senha) {
+                return response.status(400).json("Dados do funcionário incompletos");
+            }
+
+
+
             const employees = await prisma.funcionarios.create({
                 data: {
                     nome,
@@ -61,7 +73,13 @@ export default {
     update: async (request: Request, response: Response) => {
         try {
             const { id } = request.params;
-            const { nome, admin, email } = request.body;
+            const { nome, admin, email, user } = request.body;
+
+            if(!user.admin && user.id !== +id) {
+                return response.status(403).json("Não autorizado");
+            }
+
+            
             const employees = await prisma.funcionarios.update({
 
 
@@ -69,7 +87,7 @@ export default {
                 data: {
                     nome,
                     email,
-                    admin
+                    admin: user.admin ? admin: false,
                 },
             });
             return response.status(200).json(employees);
@@ -98,6 +116,10 @@ export default {
     delete: async (request: Request, response: Response) => {
         try {
             const { id } = request.params;
+            const {user}   = request.body;
+
+            if(!user.admin)
+                return response.status(403).json("Não autorizado");
             const employees = await prisma.funcionarios.delete({
                 where: {
                     id: +id
